@@ -1,0 +1,75 @@
+<html>
+<head>
+	<title>My First - IRC - Chat</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+	</head>
+<body>
+	<h1>My First - IRC - Chat</h1>
+	<div><input type="text" id="msg"></input><button id="send">Send</button></div>
+	<div class="row">
+		<div class="col-md-3" id="output">
+				<table class="table"></table>
+		</div>
+		<div class="col-md-2" id="users">
+			<ul></ul>
+		</div>
+	</div>
+</body>
+</html>
+
+<script>
+	var userName = 'yolo';
+  var irc = require("irc");
+  var userList = [];
+  var client = new irc.Client('chat.freenode.org', userName, {
+    channels: ['#schnitzelwirt']
+  });
+
+  client.addListener('message#schnitzelwirt', function (from, message) {
+  	$("#output table").append("<tr><td>"+ from + " say:</td><td>" + message + "</td></tr>");
+
+    console.log(from + ' => #schnitzelwirt: ' + message);
+  });	
+
+  client.on('join',function(channel, nick, message){
+  	console.log('new User: ' + nick);
+  	userList.push(nick.toString());
+  	printUserList();
+  });
+
+  client.on('quit',function(nick, reason, channels, message){
+  	console.log('User: ' + nick + ' left');
+    userList.splice(userList.indexOf(nick), 1);
+  	printUserList();
+  });
+
+  
+  client.on('names#schnitzelwirt', function(nicks) {
+  	for(var user in nicks){
+  				userList.push(user.toString());
+  	}
+  	console.log(userList);
+  	printUserList();
+  });
+
+  $('#submit').click(function() {
+  say($('#msg').val());
+  });
+
+  function printUserList()
+ 	{
+ 		$("#users ul").empty();
+ 		userList.forEach(function(user){
+  		$("#users ul").append("<li> -"+ user +"</li>");
+  	});
+ 	}
+
+  function say(msg)
+  {
+  	client.say('#schnitzelwirt', msg);
+  	$("#output table").append("<tr><td>"+ userName + " say:</td><td>" + msg + "</td></tr>");
+  }
+
+</script>
+
