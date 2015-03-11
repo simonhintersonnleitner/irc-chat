@@ -3,15 +3,17 @@
 	<title>My First - IRC - Chat</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/main.css">
 	</head>
 <body>
 	<h1>My First - IRC - Chat</h1>
-	<div><input type="text" id="msg"></input><button id="send">Send</button></div>
+	<div><input type="text" id="msg" required></input><button id="send">Send</button></div>
 	<div class="row">
-		<div class="col-md-3" id="output">
+		<div class="col-xs-9" id="output">
 				<table class="table"></table>
 		</div>
-		<div class="col-md-2" id="users">
+		<div class="col-xs-3" id="users">
+      <h6>Users Online</h6>
 			<ul></ul>
 		</div>
 	</div>
@@ -19,56 +21,64 @@
 </html>
 
 <script>
-	var userName = 'yolo';
+	var userName = 'simon';
   var irc = require("irc");
+  
+  var line = require("./line");
+  var messages = [];
   var userList = [];
   var client = new irc.Client('chat.freenode.org', userName, {
     channels: ['#schnitzelwirt']
   });
 
   client.addListener('message#schnitzelwirt', function (from, message) {
-  	$("#output table").append("<tr><td>"+ from + " say:</td><td>" + message + "</td></tr>");
-
     console.log(from + ' => #schnitzelwirt: ' + message);
+    var myLine = new line(from,message);
+    messages.push(myLine);
+    myLine.print();
   });	
 
   client.on('join',function(channel, nick, message){
   	console.log('new User: ' + nick);
-  	userList.push(nick.toString());
+    userList.push(nick.toString());
   	printUserList();
   });
 
   client.on('quit',function(nick, reason, channels, message){
   	console.log('User: ' + nick + ' left');
-    userList.splice(userList.indexOf(nick), 1);
+    userList.splice(userList.indexOf(nick),1);
   	printUserList();
   });
 
-  
   client.on('names#schnitzelwirt', function(nicks) {
   	for(var user in nicks){
-  				userList.push(user.toString());
+          if(user != userList[0]){
+  				  userList.push(user.toString());
+          }
   	}
   	console.log(userList);
   	printUserList();
   });
 
-  $('#submit').click(function() {
-  say($('#msg').val());
+  $('#send').click(function() {
+    var input = $('#msg');
+    if(input.val() != '')
+      say(input.val());
+    input.val('');
   });
 
-  function printUserList()
- 	{
+  function printUserList(){
  		$("#users ul").empty();
  		userList.forEach(function(user){
-  		$("#users ul").append("<li> -"+ user +"</li>");
+  		$("#users ul").prepend("<li>"+ user +"</li>");
   	});
  	}
 
-  function say(msg)
-  {
+  function say(msg){
   	client.say('#schnitzelwirt', msg);
-  	$("#output table").append("<tr><td>"+ userName + " say:</td><td>" + msg + "</td></tr>");
+    var myLine = new line(userName,msg);
+    messages.push(myLine);
+    myLine.print();
   }
 
 </script>
